@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Card } from "@/components/ui/card";
-import { MapPin, Mail, Phone, Database, ShoppingCart, Download, ChevronDown, Sparkles, Wand2, Loader2, Copy, Check } from "lucide-react";
+import { MapPin, Mail, Phone, Database, ShoppingCart, Download, ChevronDown, Sparkles, Wand2, Loader2, Copy, Check, Lock } from "lucide-react";
 import { Dataset, useDataContext } from "@/contexts/DataContext";
 import { useState } from "react";
 import api from "@/api/api";
@@ -193,79 +193,110 @@ const DatasetDetailModal = ({ dataset, isOpen, onClose, onPurchase, onDownload }
           <Card className="border border-border overflow-hidden">
             <div className="bg-muted/30 px-4 py-2 border-b border-border flex items-center justify-between">
               <span className="text-xs font-semibold text-muted-foreground uppercase">Sample Preview</span>
-              <span className="text-[10px] text-muted-foreground">
-                Showing top {sampleRecords.length} rows
-              </span>
-            </div>
-
-            <div className="relative">
-              <div className="max-h-[320px] overflow-hidden">
-                <div className="overflow-x-hidden">
-                  <div
-                    className="grid gap-3 border-b border-border bg-muted/50 px-4 py-3 text-xs font-semibold text-muted-foreground"
-                    style={{ gridTemplateColumns: previewColumns.map((column) => column.width).join(" ") }}
-                  >
-                    {previewColumns.map((column) => (
-                      <div key={column.key} className="truncate">
-                        {column.label}
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="divide-y divide-border">
-                    {sampleRecords.map((record, index) => (
-                      <div
-                        key={record.id || index}
-                        className="px-4 py-3 hover:bg-muted/10 transition-colors"
-                      >
-                        <div
-                          className="grid gap-3 text-sm"
-                          style={{ gridTemplateColumns: previewColumns.map((column) => column.width).join(" ") }}
-                        >
-                          <div className="truncate font-medium text-card-foreground">
-                            {formatValue(getFieldValue(record, "name"))}
-                          </div>
-                          <div className="truncate text-muted-foreground">
-                            {formatValue(getFieldValue(record, "email"))}
-                          </div>
-                          <div className="truncate text-muted-foreground">
-                            {formatValue(getFieldValue(record, "phone"))}
-                          </div>
-                          <div className="truncate text-muted-foreground">
-                            {formatValue(getFieldValue(record, "country_name"))}
-                          </div>
-                          <div className="truncate text-muted-foreground">
-                            {formatValue(getFieldValue(record, "city_name"))}
-                          </div>
-                          <div className="truncate font-medium text-primary">
-                            {formatValue(getFieldValue(record, "price"))}
-                          </div>
-                        </div>
-
-                        {dynamicFieldKeys.length > 0 && (
-                          <div className="mt-2 flex flex-wrap gap-1">
-                            {dynamicFieldKeys.slice(0, 4).map((key) => (
-                              <Badge key={key} variant="outline" className="text-[10px]">
-                                {key}: {formatValue(record.extra_fields?.[key])}
-                              </Badge>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {hasMorePreviewRows && (
-                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-card via-card/95 to-transparent">
-                  <div className="absolute bottom-3 left-1/2 -translate-x-1/2 text-[10px] text-muted-foreground flex items-center gap-1">
-                    <ChevronDown className="h-3 w-3" />
-                    More rows available in the full file
-                  </div>
-                </div>
+              {sampleRecords.length > 0 && (
+                <span className="text-[10px] text-muted-foreground">
+                  Showing top {sampleRecords.length} rows
+                </span>
               )}
             </div>
+
+            {sampleRecords.length > 0 ? (
+              <div className="relative">
+                <div className="max-h-[320px] overflow-hidden">
+                  <div className="overflow-x-hidden">
+                    <div
+                      className="grid gap-3 border-b border-border bg-muted/50 px-4 py-3 text-xs font-semibold text-muted-foreground"
+                      style={{ gridTemplateColumns: previewColumns.map((column) => column.width).join(" ") }}
+                    >
+                      {previewColumns.map((column) => (
+                        <div key={column.key} className="truncate">
+                          {column.label}
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="divide-y divide-border">
+                      {sampleRecords.map((record, index) => (
+                        <div
+                          key={record.id || index}
+                          className="px-4 py-3 hover:bg-muted/10 transition-colors"
+                        >
+                          <div
+                            className="grid gap-3 text-sm"
+                            style={{ gridTemplateColumns: previewColumns.map((column) => column.width).join(" ") }}
+                          >
+                            <div className="truncate font-medium text-card-foreground">
+                              {formatValue(getFieldValue(record, "name"))}
+                            </div>
+                            <div className="truncate text-muted-foreground">
+                              {formatValue(getFieldValue(record, "email"))}
+                            </div>
+                            <div className="truncate text-muted-foreground">
+                              {formatValue(getFieldValue(record, "phone"))}
+                            </div>
+                            <div className="truncate text-muted-foreground">
+                              {formatValue(getFieldValue(record, "country_name"))}
+                            </div>
+                            <div className="truncate text-muted-foreground">
+                              {formatValue(getFieldValue(record, "city_name"))}
+                            </div>
+                            <div className="truncate font-medium text-primary">
+                              {formatValue(getFieldValue(record, "price"))}
+                            </div>
+                          </div>
+
+                          {dynamicFieldKeys.length > 0 && (
+                            <div className="mt-2 flex flex-wrap gap-1">
+                              {dynamicFieldKeys.slice(0, 4).map((key) => (
+                                <Badge key={key} variant="outline" className="text-[10px]">
+                                  {key}: {formatValue(record.extra_fields?.[key])}
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {hasMorePreviewRows && (
+                  <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-card via-card/95 to-transparent">
+                    <div className="absolute bottom-3 left-1/2 -translate-x-1/2 text-[10px] text-muted-foreground flex items-center gap-1">
+                      <ChevronDown className="h-3 w-3" />
+                      More rows available in the full file
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="relative overflow-hidden">
+                <div aria-hidden="true" className="select-none px-4 py-3 space-y-3 blur-[3px] opacity-50">
+                  {[0, 1, 2].map((row) => (
+                    <div key={row} className="grid grid-cols-3 gap-3 sm:grid-cols-6">
+                      <div className="h-3 rounded bg-muted-foreground/30 col-span-1" />
+                      <div className="h-3 rounded bg-muted-foreground/20 col-span-1" />
+                      <div className="h-3 rounded bg-muted-foreground/20 col-span-1 hidden sm:block" />
+                      <div className="h-3 rounded bg-muted-foreground/20 col-span-1 hidden sm:block" />
+                      <div className="h-3 rounded bg-muted-foreground/20 col-span-1 hidden sm:block" />
+                      <div className="h-3 rounded bg-primary/20 col-span-1" />
+                    </div>
+                  ))}
+                </div>
+
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-card/70 px-6 text-center">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10">
+                    <Lock className="h-4 w-4 text-primary" />
+                  </div>
+                  <p className="text-sm font-medium text-card-foreground">
+                    Contact details are locked
+                  </p>
+                  <p className="text-xs text-muted-foreground max-w-xs">
+                    Names, emails and phone numbers are hidden until you purchase this dataset. Download a free sample to preview real rows.
+                  </p>
+                </div>
+              </div>
+            )}
           </Card>
  
           {/* AI Strategic Hooks Section */}

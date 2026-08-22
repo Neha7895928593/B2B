@@ -27,6 +27,24 @@ const stateNormalizationMap = {
   "FL": "Florida",
 };
 
+const maskEmail = (email) => {
+  if (!email || typeof email !== "string" || !email.includes("@")) return email || "";
+  const [local, domain] = email.split("@");
+  const visible = local.slice(0, 2);
+  const masked = "*".repeat(Math.max(local.length - 2, 3));
+  return `${visible}${masked}@${domain}`;
+};
+
+const maskPhone = (phone) => {
+  if (!phone || typeof phone !== "string") return phone || "";
+  const digits = phone.trim();
+  if (digits.length <= 4) return "*".repeat(digits.length);
+  const start = digits.slice(0, 2);
+  const end = digits.slice(-2);
+  const masked = "*".repeat(Math.max(digits.length - 4, 3));
+  return `${start}${masked}${end}`;
+};
+
 const normalizeLocationName = (name, map) => {
   if (!name || typeof name !== 'string') return name;
   const trimmed = name.trim();
@@ -437,8 +455,22 @@ export const getDatasets = async (req, res) => {
     for (let list of lists) {
       const listDataRes = await pool.query(
         `
-        SELECT d.dataset_id
+        SELECT
+          d.dataset_id,
+          d.name,
+          d.address,
+          d.phone,
+          d.email,
+          d.price,
+          c.category_name,
+          co.country_name,
+          s.state_name,
+          ci.city_name
         FROM dataset d
+        JOIN category c ON d.category_id = c.category_id
+        JOIN country co ON d.country_id = co.country_id
+        LEFT JOIN state s ON d.state_id = s.state_id
+        LEFT JOIN city ci ON d.city_id = ci.city_id
         WHERE d.category_id = $1
           AND d.country_id = $2
           AND ($3::int IS NULL OR d.state_id = $3)
@@ -455,6 +487,18 @@ export const getDatasets = async (req, res) => {
       );
 
       list.dataset_ids = listDataRes.rows.map((row) => row.dataset_id);
+      list.samples = listDataRes.rows.slice(0, 5).map((row) => ({
+        dataset_id: row.dataset_id,
+        name: row.name,
+        address: row.address,
+        email: maskEmail(row.email),
+        phone: maskPhone(row.phone),
+        price: row.price,
+        category_name: row.category_name,
+        country_name: row.country_name,
+        state_name: row.state_name,
+        city_name: row.city_name,
+      }));
 
       list.name = `List of ${list.category}${list.city_name ? " in " + list.city_name :
         list.state_name ? " in " + list.state_name :

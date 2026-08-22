@@ -31,10 +31,7 @@ uploads/
 # TypeScript
 *.tsbuildinfo
 
-# IDE / OS
-.vscode/
-.idea/
-.DS_Store
-Thumbs.db
-*.swp
-*.swo
+# Other
+*.bak
+*.backup
+

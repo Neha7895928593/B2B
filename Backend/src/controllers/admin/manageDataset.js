@@ -437,23 +437,8 @@ export const getDatasets = async (req, res) => {
     for (let list of lists) {
       const listDataRes = await pool.query(
         `
-        SELECT
-          d.dataset_id,
-          d.name,
-          d.address,
-          d.phone,
-          d.email,
-          d.price,
-          d.extra_fields,
-          c.category_name,
-          co.country_name,
-          s.state_name,
-          ci.city_name
+        SELECT d.dataset_id
         FROM dataset d
-        JOIN category c ON d.category_id = c.category_id
-        JOIN country co ON d.country_id = co.country_id
-        LEFT JOIN state s ON d.state_id = s.state_id
-        LEFT JOIN city ci ON d.city_id = ci.city_id
         WHERE d.category_id = $1
           AND d.country_id = $2
           AND ($3::int IS NULL OR d.state_id = $3)
@@ -469,10 +454,7 @@ export const getDatasets = async (req, res) => {
         ],
       );
 
-      const allRecords = listDataRes.rows;
-      list.samples = allRecords.slice(0, 10);
-      list.view = allRecords.slice(0, 5);
-      list.dataset_ids = allRecords.map((row) => row.dataset_id);
+      list.dataset_ids = listDataRes.rows.map((row) => row.dataset_id);
 
       list.name = `List of ${list.category}${list.city_name ? " in " + list.city_name :
         list.state_name ? " in " + list.state_name :
@@ -719,53 +701,6 @@ export const createState = async (req, res) => {
 
 
 
-
-export const getDatasetRecords = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const records = await pool.query(`
-      SELECT name, address, phone, email, country, extra_data
-      FROM dataset_records
-      WHERE dataset_id=$1
-    `, [id]);
-
-    res.json(
-      records.rows.map(row => ({
-        ...row,
-        review_count: row.extra_data?.review_count || null,
-        review_score: row.extra_data?.review_score || null,
-        url: row.extra_data?.url || null
-      }))
-    );
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: "Failed to fetch dataset records", error: error.message });
-  }
-};
-
-// GET /api/datasets
-export const getDatasetsWithoutFilter = async (req, res) => {
-  try {
-    const datasets = await pool.query(`
-      SELECT id, category, country, state, city, total_records, total_emails, total_phones, sample_file_path
-      FROM datasets
-    `);
-
-    res.json(
-      datasets.rows.map(row => ({
-        ...row,
-        name: `List of ${row.category}s` +
-          (row.city ? ` in ${row.city}, ${row.state}, ${row.country}` :
-            row.state ? ` in ${row.state}, ${row.country}` :
-              ` in ${row.country}`)
-      }))
-    );
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: "Failed to fetch datasets", error: error.message });
-  }
-};
 
 export const getDatasetSources = async (req, res) => {
   try {

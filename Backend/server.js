@@ -39,7 +39,7 @@ app.use("/api", datasetRoutes);
 app.use("/api/ai", aiRoutes);
 
 
-app.get("*", (req, res) => {
+app.get("/*splat", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 

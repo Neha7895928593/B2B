@@ -155,6 +155,21 @@ export const createOrder = async (payload: {
   return res.data;
 };
 
+export const createCustomDatasetRequest = async (payload: {
+  category?: string;
+  country?: string;
+  state?: string;
+  city?: string;
+  recordsNeeded?: string;
+  contactName: string;
+  contactEmail: string;
+  contactPhone?: string;
+  notes?: string;
+}) => {
+  const res = await api.post("/custom-requests", payload);
+  return res.data;
+};
+
 export const getMyOrders = async () => {
   const res = await api.get("/me/orders");
   return res.data;

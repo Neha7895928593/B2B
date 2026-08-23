@@ -478,6 +478,108 @@ export const downloadMyOrder = async (req, res) => {
   }
 };
 
+export const createCustomDatasetRequest = async (req, res) => {
+  try {
+    const {
+      category,
+      country,
+      state,
+      city,
+      recordsNeeded,
+      contactName,
+      contactEmail,
+      contactPhone,
+      notes,
+    } = req.body;
+
+    if (!contactName || !contactEmail) {
+      return res.status(400).json({
+        success: false,
+        message: "contactName and contactEmail are required",
+      });
+    }
+
+    const result = await pool.query(
+      `INSERT INTO custom_dataset_requests
+         (user_id, category, country, state, city, records_needed, contact_name, contact_email, contact_phone, notes)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+       RETURNING request_id, created_at`,
+      [
+        req.user?.user_id || null,
+        category || null,
+        country || null,
+        state || null,
+        city || null,
+        recordsNeeded || null,
+        contactName,
+        contactEmail.toLowerCase(),
+        contactPhone || null,
+        notes || null,
+      ],
+    );
+
+    const request = result.rows[0];
+    const adminEmail = process.env.ADMIN_EMAIL;
+
+    if (adminEmail) {
+      sendMail({
+        to: adminEmail,
+        subject: `New custom dataset request #${request.request_id}`,
+        text: `New custom dataset request from ${contactName} (${contactEmail}).\n\nCategory: ${category || "-"}\nCountry: ${country || "-"}\nState: ${state || "-"}\nCity: ${city || "-"}\nRecords needed: ${recordsNeeded || "-"}\nPhone: ${contactPhone || "-"}\nNotes: ${notes || "-"}`,
+        html: `
+          <div style="font-family:Arial,sans-serif;line-height:1.6;color:#111">
+            <h2 style="margin:0 0 12px">New custom dataset request</h2>
+            <p><strong>From:</strong> ${contactName} (${contactEmail})</p>
+            <p><strong>Category:</strong> ${category || "-"}</p>
+            <p><strong>Location:</strong> ${[city, state, country].filter(Boolean).join(", ") || "-"}</p>
+            <p><strong>Records needed:</strong> ${recordsNeeded || "-"}</p>
+            <p><strong>Phone:</strong> ${contactPhone || "-"}</p>
+            <p><strong>Notes:</strong> ${notes || "-"}</p>
+          </div>
+        `,
+      }).catch((mailError) => {
+        console.error("Custom request admin email error:", mailError);
+      });
+    }
+
+    sendMail({
+      to: contactEmail,
+      subject: "We received your custom dataset request",
+      text: `Hi ${contactName}, we received your custom dataset request and will get back to you shortly with pricing and availability.`,
+      html: `
+        <div style="font-family:Arial,sans-serif;line-height:1.6;color:#111">
+          <h2 style="margin:0 0 12px">Request received</h2>
+          <p>Hi ${contactName},</p>
+          <p>We received your custom dataset request and will get back to you shortly with pricing and availability.</p>
+        </div>
+      `,
+    }).catch((mailError) => {
+      console.error("Custom request confirmation email error:", mailError);
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "Request submitted successfully",
+      requestId: request.request_id,
+    });
+  } catch (error) {
+    console.error("Create custom dataset request error:", error);
+    return res.status(500).json({ success: false, message: "Failed to submit request" });
+  }
+};
+
+export const getCustomDatasetRequests = async (_req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT * FROM custom_dataset_requests ORDER BY created_at DESC`,
+    );
+    return res.json({ success: true, requests: result.rows });
+  } catch (error) {
+    console.error("Get custom dataset requests error:", error);
+    return res.status(500).json({ success: false, message: "Failed to fetch requests" });
+  }
+};
+
 export const getAnalyticsSummary = async (_req, res) => {
   try {
     const [ordersResult, transactionsResult, datasetsResult] = await Promise.all([

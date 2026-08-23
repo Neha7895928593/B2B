@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/select";
 import { Filter, Loader2 } from "lucide-react";
 import { getFilterOptions } from "@/api/apiHub";
+import CustomRequestModal from "@/components/CustomRequestModal";
 
 interface SearchFiltersProps {
   onFilterChange: (filters: {
@@ -36,6 +37,7 @@ const SearchFilters = ({ onFilterChange }: SearchFiltersProps) => {
   const [availableStates, setAvailableStates] = useState<FilterOption[]>([]);
   const [availableCities, setAvailableCities] = useState<FilterOption[]>([]);
   const [isLoadingOptions, setIsLoadingOptions] = useState(true);
+  const [isCustomRequestOpen, setIsCustomRequestOpen] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -240,10 +242,16 @@ const SearchFilters = ({ onFilterChange }: SearchFiltersProps) => {
           )}
         </Button>
 
-        <Button className="w-full h-9 lg:h-10 bg-primary hover:bg-primary/90 text-primary-foreground text-xs lg:text-sm font-medium">
+        <Button
+          type="button"
+          onClick={() => setIsCustomRequestOpen(true)}
+          className="w-full h-9 lg:h-10 bg-primary hover:bg-primary/90 text-primary-foreground text-xs lg:text-sm font-medium"
+        >
           Request Custom Dataset
         </Button>
       </div>
+
+      <CustomRequestModal isOpen={isCustomRequestOpen} onClose={() => setIsCustomRequestOpen(false)} />
     </Card>
   );
 };

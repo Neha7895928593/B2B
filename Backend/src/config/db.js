@@ -321,6 +321,23 @@ export const initializeDatabase = async () => {
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
     `);
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS custom_dataset_requests (
+        request_id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(user_id) ON DELETE SET NULL,
+        category VARCHAR(255),
+        country VARCHAR(255),
+        state VARCHAR(255),
+        city VARCHAR(255),
+        records_needed VARCHAR(100),
+        contact_name VARCHAR(255) NOT NULL,
+        contact_email VARCHAR(255) NOT NULL,
+        contact_phone VARCHAR(50),
+        notes TEXT,
+        status VARCHAR(50) NOT NULL DEFAULT 'new',
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
     console.log("Business tables are ready");
     const adminEmail = await seedAdminAccount(client);
     await client.query(
